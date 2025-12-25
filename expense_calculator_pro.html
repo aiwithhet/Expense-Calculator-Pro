@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Expense Calculator Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .form-section {
+            padding: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-group label span {
+            margin-right: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper::before {
+            content: '₹';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 35px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group input.error {
+            border-color: #e74c3c;
+        }
+
+        .input-group.salary-input input {
+            border-color: #11998e;
+            background: #f0fff4;
+        }
+
+        .input-group.salary-input input:focus {
+            border-color: #11998e;
+            box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 20px 0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Section */
+        .results {
+            display: none;
+            padding: 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .summary {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-item .label {
+            color: #666;
+        }
+
+        .summary-item .value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-item .value.positive {
+            color: #27ae60;
+        }
+
+        .summary-item .value.negative {
+            color: #e74c3c;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-box.great {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-box.good {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-box.warning {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Table */
+        .expense-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .expense-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px;
+            text-align: left;
+        }
+
+        .expense-table th:last-child {
+            text-align: right;
+        }
+
+        .expense-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .expense-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .expense-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .expense-table tr.total-row {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .expense-table tr.salary-row {
+            background: #e8f5e9;
+        }
+
+        .expense-table tr.remaining-row {
+            background: #e3f2fd;
+        }
+
+        /* Investment Section */
+        .investment-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .investment-section h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .investment-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .investment-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid;
+        }
+
+        .investment-card.emergency {
+            border-left-color: #e74c3c;
+        }
+
+        .investment-card.fd {
+            border-left-color: #3498db;
+        }
+
+        .investment-card.mutual {
+            border-left-color: #9b59b6;
+        }
+
+        .investment-card.stocks {
+            border-left-color: #27ae60;
+        }
+
+        .investment-card.gold {
+            border-left-color: #f39c12;
+        }
+
+        .investment-card.crypto {
+            border-left-color: #e67e22;
+        }
+
+        .investment-card .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .investment-card .inv-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .investment-card .inv-percent {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        .investment-card .inv-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #38ef7d;
+            margin-bottom: 5px;
+        }
+
+        .investment-card .inv-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .investment-card .inv-returns {
+            font-size: 0.8rem;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .market-note {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .market-note strong {
+            color: #38ef7d;
+        }
+
+        .no-savings-msg {
+            text-align: center;
+            padding: 20px;
+            color: #ff6b6b;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            background: #6c757d;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #888;
+            font-size: 0.85rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .investment-card .inv-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Expense Calculator</h1>
+            <p>Track expenses, savings & get investment tips</p>
+        </div>
+
+        <div class="form-section">
+            <!-- Salary Section -->
+            <div class="section-title">
+                <span>💵</span> Your Income
+            </div>
+            
+            <div class="input-group salary-input">
+                <label><span>💼</span>Monthly Salary</label>
+                <div class="input-wrapper">
+                    <input type="number" id="salary" placeholder="Enter your monthly salary" min="0">
+                </div>
+                <div class="error-msg" id="salary-error">Please enter a valid salary amount</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Expenses Section -->
+            <div class="section-title">
+                <span>📝</span> Your Expenses
+            </div>
+
+            <div class="input-group">
+                <label><span>🏠</span>Rent</label>
+                <div class="input-wrapper">
+                    <input type="number" id="rent" placeholder="Enter rent amount" min="0">
+                </div>
+                <div class="error-msg" id="rent-error">Please enter a valid amount (no negatives)</div>
+            </div>
+
+            <div class="input-group">
+                <label><span>💡</span>Electricity</label>
+                <div class="input-wrapper">
+                    <input type="number" id="electricity" placeholder="Enter electricity bill" min="0">
+                </div>
+                <div class="error-msg" id="electricity-error">Please enter a valid amount (no negatives)</div>
+            </div>
+
+            <div class="input-group">
+                <label><span>⛽</span>Petrol</label>
+                <div class="input-wrapper">
+                    <input type="number" id="petrol" placeholder="Enter petrol expense" min="0">
+                </div>
+                <div class="error-msg" id="petrol-error">Please enter a valid amount (no negatives)</div>
+            </div>
+
+            <div class="input-group">
+                <label><span>🏦</span>EMI</label>
+                <div class="input-wrapper">
+                    <input type="number" id="emi" placeholder="Enter EMI amount" min="0">
+                </div>
+                <div class="error-msg" id="emi-error">Please enter a valid amount (no negatives)</div>
+            </div>
+
+            <button class="btn" onclick="calculateExpenses()">
+                📊 Calculate & Get Investment Tips
+            </button>
+        </div>
+
+        <div class="results" id="results">
+            <h2>📊 Your Results</h2>
+
+            <div class="status-box" id="status-box"></div>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <span class="label">💼 Your Salary</span>
+                    <span class="value" id="display-salary">₹0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">💸 Total Expense</span>
+                    <span class="value" id="total-expense">₹0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">💰 Remaining Salary</span>
+                    <span class="value" id="remaining-salary">₹0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">📈 Savings Percentage</span>
+                    <span class="value" id="savings-percent">0%</span>
+                </div>
+            </div>
+
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>🏠 Rent</td>
+                        <td id="table-rent">₹0</td>
+                    </tr>
+                    <tr>
+                        <td>💡 Electricity</td>
+                        <td id="table-electricity">₹0</td>
+                    </tr>
+                    <tr>
+                        <td>⛽ Petrol</td>
+                        <td id="table-petrol">₹0</td>
+                    </tr>
+                    <tr>
+                        <td>🏦 EMI</td>
+                        <td id="table-emi">₹0</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>📊 TOTAL EXPENSE</td>
+                        <td id="table-total">₹0</td>
+                    </tr>
+                    <tr class="salary-row">
+                        <td>💵 SALARY</td>
+                        <td id="table-salary">₹0</td>
+                    </tr>
+                    <tr class="remaining-row">
+                        <td>✨ REMAINING</td>
+                        <td id="table-remaining">₹0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Investment Suggestions -->
+            <div class="investment-section" id="investment-section">
+                <h3>📈 Smart Investment Suggestions</h3>
+                <div class="investment-grid" id="investment-grid">
+                    <!-- Investment cards will be inserted here -->
+                </div>
+                <div class="market-note" id="market-note"></div>
+            </div>
+
+            <button class="btn reset-btn" onclick="resetForm()">
+                🔄 Calculate Again
+            </button>
+        </div>
+
+        <div class="footer">
+            Made with ❤️ | Expense Calculator + Investment Advisor
+        </div>
+    </div>
+
+    <script>
+        function validateInput(id) {
+            const input = document.getElementById(id);
+            const error = document.getElementById(id + '-error');
+            const value = parseFloat(input.value);
+
+            if (input.value === '' || isNaN(value) || value < 0) {
+                input.classList.add('error');
+                error.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error');
+                error.style.display = 'none';
+                return true;
+            }
+        }
+
+        function formatCurrency(amount) {
+            return '₹' + amount.toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        function getInvestmentSuggestions(savings, savingsPercent) {
+            const suggestions = [];
+            
+            if (savings <= 0) {
+                return null;
+            }
+
+            // Emergency Fund (Always recommend first - 20%)
+            suggestions.push({
+                name: 'Emergency Fund',
+                icon: '🆘',
+                percent: 20,
+                amount: savings * 0.20,
+                desc: 'Keep 3-6 months expenses in savings account',
+                returns: '3-4% p.a. (Savings Account)',
+                class: 'emergency'
+            });
+
+            // Fixed Deposit (Safe - 20%)
+            suggestions.push({
+                name: 'Fixed Deposit',
+                icon: '🏦',
+                percent: 20,
+                amount: savings * 0.20,
+                desc: 'Safe investment with guaranteed returns',
+                returns: '6.5-7.5% p.a. (Current FD rates)',
+                class: 'fd'
+            });
+
+            // Mutual Funds SIP (30%)
+            suggestions.push({
+                name: 'Mutual Funds (SIP)',
+                icon: '📊',
+                percent: 30,
+                amount: savings * 0.30,
+                desc: 'Index funds or diversified equity funds',
+                returns: '10-12% p.a. (Long-term average)',
+                class: 'mutual'
+            });
+
+            // Stocks (If good savings - 15%)
+            if (savingsPercent >= 20) {
+                suggestions.push({
+                    name: 'Direct Stocks',
+                    icon: '📈',
+                    percent: 15,
+                    amount: savings * 0.15,
+                    desc: 'Blue-chip stocks for long-term growth',
+                    returns: '12-15% p.a. (Market dependent)',
+                    class: 'stocks'
+                });
+            }
+
+            // Gold (10%)
+            suggestions.push({
+                name: 'Digital Gold / SGBs',
+                icon: '🥇',
+                percent: 10,
+                amount: savings * 0.10,
+                desc: 'Hedge against inflation',
+                returns: '8-10% p.a. + 2.5% interest (SGB)',
+                class: 'gold'
+            });
+
+            // Crypto (Only if high savings - 5%)
+            if (savingsPercent >= 30 && savings >= 10000) {
+                suggestions.push({
+                    name: 'Crypto (High Risk)',
+                    icon: '₿',
+                    percent: 5,
+                    amount: savings * 0.05,
+                    desc: 'Only invest what you can afford to lose',
+                    returns: 'Highly volatile - High risk/reward',
+                    class: 'crypto'
+                });
+            }
+
+            return suggestions;
+        }
+
+        function getMarketNote(savingsPercent, savings) {
+            const currentDate = new Date().toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'long' 
+            });
+
+            let note = `<strong>💡 Market Insight (${currentDate}):</strong> `;
+
+            if (savingsPercent >= 30) {
+                note += `Excellent savings rate! Consider increasing SIP amounts. Current market offers good entry points for long-term investors. With ₹${savings.toLocaleString('en-IN')} monthly savings, you could build a corpus of ₹${(savings * 12 * 10 * 1.5).toLocaleString('en-IN')}+ in 10 years!`;
+            } else if (savingsPercent >= 20) {
+                note += `Good savings! Start with index funds (Nifty 50/Sensex) for beginners. Avoid timing the market - consistency beats timing. Your ₹${savings.toLocaleString('en-IN')} monthly can grow significantly with compound interest.`;
+            } else if (savingsPercent >= 10) {
+                note += `Decent start! Focus on building emergency fund first (3-6 months expenses). Consider low-cost index funds for remaining amount. Every rupee saved today is worth more tomorrow!`;
+            } else {
+                note += `Priority should be reducing expenses and building emergency fund. Even ₹500/month SIP can grow to ₹1 Lakh+ in 10 years. Start small, stay consistent!`;
+            }
+
+            return note;
+        }
+
+        function renderInvestments(savings, savingsPercent) {
+            const section = document.getElementById('investment-section');
+            const grid = document.getElementById('investment-grid');
+            const note = document.getElementById('market-note');
+
+            if (savings <= 0) {
+                grid.innerHTML = `
+                    <div class="no-savings-msg">
+                        <p>⚠️ No savings available for investment.</p>
+                        <p>Focus on reducing expenses first!</p>
+                    </div>
+                `;
+                note.innerHTML = `<strong>💡 Tip:</strong> Try to save at least 10-20% of your income. Review your expenses and look for areas to cut back.`;
+                return;
+            }
+
+            const suggestions = getInvestmentSuggestions(savings, savingsPercent);
+            
+            let html = '';
+            suggestions.forEach(inv => {
+                html += `
+                    <div class="investment-card ${inv.class}">
+                        <div class="inv-header">
+                            <span class="inv-name">${inv.icon} ${inv.name}</span>
+                            <span class="inv-percent">${inv.percent}%</span>
+                        </div>
+                        <div class="inv-amount">${formatCurrency(inv.amount)}/month</div>
+                        <div class="inv-desc">${inv.desc}</div>
+                        <div class="inv-returns">📊 Expected: ${inv.returns}</div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+            note.innerHTML = getMarketNote(savingsPercent, savings);
+        }
+
+        function calculateExpenses() {
+            // Validate all inputs
+            const isSalaryValid = validateInput('salary');
+            const isRentValid = validateInput('rent');
+            const isElectricityValid = validateInput('electricity');
+            const isPetrolValid = validateInput('petrol');
+            const isEmiValid = validateInput('emi');
+
+            if (!isSalaryValid || !isRentValid || !isElectricityValid || !isPetrolValid || !isEmiValid) {
+                return;
+            }
+
+            // Get values
+            const salary = parseFloat(document.getElementById('salary').value) || 0;
+            const rent = parseFloat(document.getElementById('rent').value) || 0;
+            const electricity = parseFloat(document.getElementById('electricity').value) || 0;
+            const petrol = parseFloat(document.getElementById('petrol').value) || 0;
+            const emi = parseFloat(document.getElementById('emi').value) || 0;
+
+            // Calculate
+            const totalExpense = rent + electricity + petrol + emi;
+            const remaining = salary - totalExpense;
+            const savingsPercent = salary > 0 ? (remaining / salary) * 100 : 0;
+
+            // Update summary
+            document.getElementById('display-salary').textContent = formatCurrency(salary);
+            document.getElementById('total-expense').textContent = formatCurrency(totalExpense);
+            
+            const remainingEl = document.getElementById('remaining-salary');
+            remainingEl.textContent = formatCurrency(remaining);
+            remainingEl.className = 'value ' + (remaining >= 0 ? 'positive' : 'negative');
+
+            const savingsEl = document.getElementById('savings-percent');
+            savingsEl.textContent = savingsPercent.toFixed(1) + '%';
+            savingsEl.className = 'value ' + (savingsPercent >= 0 ? 'positive' : 'negative');
+
+            // Update status box
+            const statusBox = document.getElementById('status-box');
+            if (remaining < 0) {
+                statusBox.className = 'status-box warning';
+                statusBox.innerHTML = '⚠️ Over budget by ' + formatCurrency(Math.abs(remaining));
+            } else if (savingsPercent >= 30) {
+                statusBox.className = 'status-box great';
+                statusBox.innerHTML = '🌟 Excellent! You\'re a super saver!';
+            } else if (savingsPercent >= 20) {
+                statusBox.className = 'status-box great';
+                statusBox.innerHTML = '✅ Great savings! Keep it up!';
+            } else if (savingsPercent >= 10) {
+                statusBox.className = 'status-box good';
+                statusBox.innerHTML = '👍 Good, but try to save more!';
+            } else {
+                statusBox.className = 'status-box warning';
+                statusBox.innerHTML = '💡 Consider reducing expenses';
+            }
+
+            // Update table
+            document.getElementById('table-rent').textContent = formatCurrency(rent);
+            document.getElementById('table-electricity').textContent = formatCurrency(electricity);
+            document.getElementById('table-petrol').textContent = formatCurrency(petrol);
+            document.getElementById('table-emi').textContent = formatCurrency(emi);
+            document.getElementById('table-total').textContent = formatCurrency(totalExpense);
+            document.getElementById('table-salary').textContent = formatCurrency(salary);
+            document.getElementById('table-remaining').textContent = formatCurrency(remaining);
+
+            // Render investment suggestions
+            renderInvestments(remaining, savingsPercent);
+
+            // Show results
+            document.getElementById('results').classList.add('show');
+
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        function resetForm() {
+            document.getElementById('salary').value = '';
+            document.getElementById('rent').value = '';
+            document.getElementById('electricity').value = '';
+            document.getElementById('petrol').value = '';
+            document.getElementById('emi').value = '';
+            document.getElementById('results').classList.remove('show');
+
+            // Remove error states
+            ['salary', 'rent', 'electricity', 'petrol', 'emi'].forEach(id => {
+                document.getElementById(id).classList.remove('error');
+                document.getElementById(id + '-error').style.display = 'none';
+            });
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateExpenses();
+            }
+        });
+    </script>
+</body>
+</html>
